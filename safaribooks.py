@@ -1091,16 +1091,18 @@ if __name__ == "__main__":
                                                                 " file even if there isn't any error."
     )
     arguments.add_argument("--help", action="help", default=argparse.SUPPRESS, help='Show this help message.')
-    arguments.add_argument(
+    bookid_arg = arguments.add_argument(
             "--bookid", metavar='<BOOK ID>',
             help="Book digits ID that you want to download. You can find it in the URL (X-es):"
                  " `" + SAFARI_BASE_URL + "/library/view/book-name/XXXXXXXXXXXXX/`"
         )
-    arguments.add_argument(
+    playlist_arg = arguments.add_argument(
             "--playlist", metavar='<PLAYLIST ID>',
             help="Playlist ID that you want to download. You can find it in the URL (X-es):"
                  " `" + SAFARI_BASE_URL + "/library/view/playlist-name/XXXXXXXXXXXXX/`"
         )
+    if not bookid_arg and not playlist_arg:
+        arguments.error("You must provide either a book ID or a playlist ID.")
 
     args_parsed = arguments.parse_args()
     if args_parsed.cred or args_parsed.login:
