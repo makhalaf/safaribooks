@@ -799,6 +799,27 @@ class SafariBooks:
             .write(self.BASE_HTML.format(contents[0], contents[1]).encode("utf-8", 'xmlcharrefreplace'))
         self.display.log("Created: %s" % self.filename)
 
+    def get_user_playlists(self):
+        # Make a request to the appropriate API endpoint to get the user's playlists
+        response = self.requests_provider(API_ORIGIN_URL + "/playlists")
+        if response == 0:
+            self.display.exit("API: unable to retrieve user's playlists.")
+        
+        playlists = response.json()
+        
+        # For each playlist, retrieve the list of books and download them
+        for playlist in playlists:
+            response = self.requests_provider(API_ORIGIN_URL + "/playlists/" + playlist["id"])
+            if response == 0:
+                self.display.exit("API: unable to retrieve books in playlist.")
+            
+            books = response.json()
+            
+            # For each book ID, download the book
+            for book in books:
+                self.book_id = book["id"]
+                self.get()
+
     def get(self):
         len_books = len(self.book_chapters)
 
