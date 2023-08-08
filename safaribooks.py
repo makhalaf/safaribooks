@@ -800,17 +800,21 @@ class SafariBooks:
         self.display.log("Created: %s" % self.filename)
 
     def get(self):
-        len_books = len(self.book_chapters)
-
-        for _ in range(len_books):
-            if not len(self.chapters_queue):
-                return
-
-            first_page = len_books == len(self.chapters_queue)
-
-            next_chapter = self.chapters_queue.pop(0)
-            self.chapter_title = next_chapter["title"]
-            self.filename = next_chapter["filename"]
+            len_books = len(self.book_chapters)
+    
+            for _ in range(len_books):
+                if not len(self.chapters_queue):
+                    return
+    
+                first_page = len_books == len(self.chapters_queue)
+    
+                next_chapter = self.chapters_queue.pop(0)
+                self.chapter_title = next_chapter["title"]
+                self.filename = next_chapter["filename"]
+    
+                if self.args.playlist:
+                    self.book_id = next_chapter["bookid"]
+                    self.api_url = self.API_TEMPLATE.format(self.book_id)
 
             asset_base_url = next_chapter['asset_base_url']
             api_v2_detected = False
@@ -1088,10 +1092,15 @@ if __name__ == "__main__":
     )
     arguments.add_argument("--help", action="help", default=argparse.SUPPRESS, help='Show this help message.')
     arguments.add_argument(
-        "bookid", metavar='<BOOK ID>',
-        help="Book digits ID that you want to download. You can find it in the URL (X-es):"
-             " `" + SAFARI_BASE_URL + "/library/view/book-name/XXXXXXXXXXXXX/`"
-    )
+            "--bookid", metavar='<BOOK ID>',
+            help="Book digits ID that you want to download. You can find it in the URL (X-es):"
+                 " `" + SAFARI_BASE_URL + "/library/view/book-name/XXXXXXXXXXXXX/`"
+        )
+    arguments.add_argument(
+            "--playlist", metavar='<PLAYLIST ID>',
+            help="Playlist ID that you want to download. You can find it in the URL (X-es):"
+                 " `" + SAFARI_BASE_URL + "/library/view/playlist-name/XXXXXXXXXXXXX/`"
+        )
 
     args_parsed = arguments.parse_args()
     if args_parsed.cred or args_parsed.login:
@@ -1119,6 +1128,12 @@ if __name__ == "__main__":
         if args_parsed.no_cookies:
             arguments.error("invalid option: `--no-cookies` is valid only if you use the `--cred` option")
 
-    SafariBooks(args_parsed)
+    if args_parsed.bookid:
+        SafariBooks(args_parsed)
+    elif args_parsed.playlist:
+        playlist_books = get_books_from_playlist(args_parsed.playlist)  # function to implement
+        for bookid in playlist_books:
+            args_parsed.bookid = bookid
+            SafariBooks(args_parsed)
     # Hint: do you want to download more then one book once, initialized more than one instance of `SafariBooks`...
     sys.exit(0)
