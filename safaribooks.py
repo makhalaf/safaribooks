@@ -899,17 +899,22 @@ class SafariBooks:
         self.display.state(len(self.images), self.images_done_queue.qsize())
 
     def _start_multiprocessing(self, operation, full_queue):
-        if len(full_queue) > 5:
-            for i in range(0, len(full_queue), 5):
-                self._start_multiprocessing(operation, full_queue[i:i + 5])
-
-        else:
-            process_queue = [Process(target=operation, args=(arg,)) for arg in full_queue]
-            for proc in process_queue:
-                proc.start()
-
-            for proc in process_queue:
-                proc.join()
+            epub_file = os.path.join(self.BOOK_PATH, self.book_id + ".epub")
+            if os.path.isfile(epub_file):
+                self.display.log("Book `%s` already exists. Download skipped." % epub_file)
+                return
+    
+            if len(full_queue) > 5:
+                for i in range(0, len(full_queue), 5):
+                    self._start_multiprocessing(operation, full_queue[i:i + 5])
+    
+            else:
+                process_queue = [Process(target=operation, args=(arg,)) for arg in full_queue]
+                for proc in process_queue:
+                    proc.start()
+    
+                for proc in process_queue:
+                    proc.join()
 
     def collect_css(self):
         self.display.state_status.value = -1
