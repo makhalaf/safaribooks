@@ -908,15 +908,12 @@ class SafariBooks:
             return
     
         try:
-            if len(full_queue) > 5:
-                for i in range(0, len(full_queue), 5):
-                    self._start_multiprocessing(operation, full_queue[i:i + 5])
-    
-            else:
-                process_queue = [Process(target=operation, args=(arg,)) for arg in full_queue]
+            while len(full_queue) > 5:
+                chunk = full_queue[:5]
+                full_queue = full_queue[5:]
+                process_queue = [Process(target=operation, args=(arg,)) for arg in chunk]
                 for proc in process_queue:
                     proc.start()
-    
                 for proc in process_queue:
                     proc.join()
         except IOError as e:
