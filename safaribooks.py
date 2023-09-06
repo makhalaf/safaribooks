@@ -898,21 +898,29 @@ class SafariBooks:
         self.images_done_queue.put(1)
         self.display.state(len(self.images), self.images_done_queue.qsize())
 
+    def _book_exists(self):
+        epub_file = os.path.join(self.BOOK_PATH, self.book_id + ".epub")
+        return os.path.isfile(epub_file)
+    
     def _start_multiprocessing(self, operation, full_queue):
-            try:
-                if len(full_queue) > 5:
-                    for i in range(0, len(full_queue), 5):
-                        self._start_multiprocessing(operation, full_queue[i:i + 5])
+        if self._book_exists():
+            self.display.log("Book `%s` already exists. Download skipped." % epub_file)
+            return
     
-                else:
-                    process_queue = [Process(target=operation, args=(arg,)) for arg in full_queue]
-                    for proc in process_queue:
-                        proc.start()
+        try:
+            if len(full_queue) > 5:
+                for i in range(0, len(full_queue), 5):
+                    self._start_multiprocessing(operation, full_queue[i:i + 5])
     
-                    for proc in process_queue:
-                        proc.join()
-            except IOError as e:
-                self.display.error(f"IOError occurred: {e}")
+            else:
+                process_queue = [Process(target=operation, args=(arg,)) for arg in full_queue]
+                for proc in process_queue:
+                    proc.start()
+    
+                for proc in process_queue:
+                    proc.join()
+        except IOError as e:
+            self.display.error(f"IOError occurred: {e}")
 
     def collect_css(self):
         self.display.state_status.value = -1
@@ -1124,4 +1132,4 @@ if __name__ == "__main__":
 
     SafariBooks(args_parsed)
     # Hint: do you want to download more then one book once, initialized more than one instance of `SafariBooks`...
-    return
+    sys.exit(0)
