@@ -1124,4 +1124,4 @@ if __name__ == "__main__":
 
     SafariBooks(args_parsed)
     # Hint: do you want to download more then one book once, initialized more than one instance of `SafariBooks`...
-    sys.exit(0)
+    return
