@@ -898,18 +898,26 @@ class SafariBooks:
         self.images_done_queue.put(1)
         self.display.state(len(self.images), self.images_done_queue.qsize())
 
+    def _book_exists(self):
+        epub_file = os.path.join(self.BOOK_PATH, self.book_id + ".epub")
+        return os.path.isfile(epub_file)
+    
     def _start_multiprocessing(self, operation, full_queue):
-        if len(full_queue) > 5:
-            for i in range(0, len(full_queue), 5):
-                self._start_multiprocessing(operation, full_queue[i:i + 5])
-
-        else:
-            process_queue = [Process(target=operation, args=(arg,)) for arg in full_queue]
-            for proc in process_queue:
-                proc.start()
-
-            for proc in process_queue:
-                proc.join()
+        if self._book_exists():
+            self.display.log("Book `%s` already exists. Download skipped." % epub_file)
+            return
+    
+        try:
+            while len(full_queue) > 5:
+                chunk = full_queue[:5]
+                full_queue = full_queue[5:]
+                process_queue = [Process(target=operation, args=(arg,)) for arg in chunk]
+                for proc in process_queue:
+                    proc.start()
+                for proc in process_queue:
+                    proc.join()
+        except IOError as e:
+            self.display.error(f"IOError occurred: {e}")
 
     def collect_css(self):
         self.display.state_status.value = -1
